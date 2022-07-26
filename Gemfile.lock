@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     tncl-func (0.1.0)
+      zeitwerk (~> 2.6.0)
 
 GEM
   remote: https://rubygems.org/
@@ -54,6 +55,7 @@ GEM
       rubocop (~> 1.31)
     ruby-progressbar (1.11.0)
     unicode-display_width (2.2.0)
+    zeitwerk (2.6.0)
 
 PLATFORMS
   x86_64-linux
