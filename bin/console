@@ -12,4 +12,10 @@ require "tncl/func"
 # Pry.start
 
 require "irb"
-IRB.start(__FILE__)
+begin
+  Async do
+    IRB.start(__FILE__)
+  end
+rescue RubyLex::TerminateLineInput
+  retry
+end

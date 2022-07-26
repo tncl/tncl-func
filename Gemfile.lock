@@ -2,15 +2,24 @@ PATH
   remote: .
   specs:
     tncl-func (0.1.0)
+      async (>= 2.0.0, < 3.0.0)
       zeitwerk (~> 2.6.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.2)
+    async (2.0.3)
+      console (~> 1.10)
+      io-event (~> 1.0.0)
+      timers (~> 4.1)
     childprocess (4.1.0)
+    console (1.15.3)
+      fiber-local
     diff-lcs (1.5.0)
+    fiber-local (1.0.0)
     iniparse (1.5.0)
+    io-event (1.0.9)
     json (2.6.2)
     overcommit (0.59.1)
       childprocess (>= 0.6.3, < 5)
@@ -54,6 +63,7 @@ GEM
     rubocop-rspec (2.12.1)
       rubocop (~> 1.31)
     ruby-progressbar (1.11.0)
+    timers (4.3.3)
     unicode-display_width (2.2.0)
     zeitwerk (2.6.0)
 
