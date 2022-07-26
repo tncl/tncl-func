@@ -6,7 +6,7 @@ loader.setup
 
 require "async"
 
-module Tncl
+module TNCL
   module Func
     class Error < StandardError; end
     # Your code goes here...

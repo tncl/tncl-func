@@ -4,7 +4,7 @@ require_relative "lib/tncl/func/version"
 
 Gem::Specification.new do |spec|
   spec.name = "tncl-func"
-  spec.version = Tncl::Func::VERSION
+  spec.version = TNCL::Func::VERSION
   spec.authors = ["Gleb Sinyavskiy"]
   spec.email = ["zhulik.gleb@gmail.com"]
 
