@@ -30,6 +30,8 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "async", ">= 2.0.0", "< 3.0.0"
+  spec.add_dependency "async-io", "~> 1.33.0"
+  spec.add_dependency "async-process", "~> 1.3.0"
   spec.add_dependency "zeitwerk", "~> 2.6.0"
 
   # For more information and examples about making a new gem, check out our

@@ -14,3 +14,5 @@ gem "overcommit"
 gem "rubocop"
 gem "rubocop-performance"
 gem "rubocop-rspec"
+
+gem "async-rspec"

@@ -29,3 +29,9 @@ Style/SymbolArray:
 
 Style/WordArray:
   EnforcedStyle: brackets
+
+Metrics/MethodLength:
+  Max: 15
+
+# Style/ClassAndModuleChildren:
+#   EnforcedStyle: compact

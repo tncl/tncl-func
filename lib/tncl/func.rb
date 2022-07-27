@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "zeitwerk"
-loader = Zeitwerk::Loader.for_gem
-loader.setup
-
 require "async"
+require "async/io"
+require "async/process"
+require "async/notification"
+
+require "tncl"
 
 module TNCL
   module Func
     class Error < StandardError; end
-    # Your code goes here...
   end
 end

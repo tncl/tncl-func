@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
+require "async/rspec"
+
 require "tncl/func"
+
+# pp Dir["#{__dir__}}/support/**/*.rb"]
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -12,4 +17,6 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.include_context(Async::RSpec::Reactor)
 end
