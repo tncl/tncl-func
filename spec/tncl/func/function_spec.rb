@@ -27,6 +27,9 @@ RSpec.describe TNCL::Func::Function do
 
       context "when container does not print READY in time" do
         let(:image) { "ready_timeout" }
+
+        include_examples "raises an exception", described_class::InitializationTimeoutError,
+                         "function 'ready_timeout': initialization timed out"
       end
 
       context "when container initialization fails" do

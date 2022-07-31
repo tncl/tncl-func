@@ -78,7 +78,7 @@ module TNCL
         raise WrongReadyMessageError,
               "function '#{@name}': wrong ready message. Expected: '#{READY}', received: '#{m[0..80]}'"
       rescue ::Async::TimeoutError
-        raise InitializationTimeoutError, "function '#{@name}' initialization timed out" if @process.running?
+        raise InitializationTimeoutError, "function '#{@name}': initialization timed out" if @process.running?
       rescue ::Async::Stop
         nil
       end
