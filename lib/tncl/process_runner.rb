@@ -13,13 +13,13 @@ class TNCL::ProcessRunner
 
   def_delegators :@process, :wait, :kill, :running?
   def_delegators :@stdin, :write
-  def_delegator :@ready, :wait, :wait_ready
+  def_delegator :@spawned, :wait, :wait_spawned
 
   def initialize(*command, parent: ::Async::Task.current)
     @command = command
     @parent = parent
 
-    @ready = ::Async::Notification.new
+    @spawned = ::Async::Notification.new
 
     @pipes = Array.new(3) { ::Async::IO.pipe }.flatten.each{ _1.sync = true }
     @stdin_r, @stdin, @stdout, @stdout_w, @stderr, @stderr_w = @pipes
@@ -28,7 +28,7 @@ class TNCL::ProcessRunner
   def spawn
     raise AlreadyRunning unless @process.nil?
 
-    @ready.signal
+    @spawned.signal
 
     @process = ::Async::Process::Child.new(*@command, in: @stdin_r.io, out: @stdout_w.io, err: @stderr_w.io)
 

@@ -69,7 +69,7 @@ class TNCL::Func::Function
   end
 
   def wait_ready
-    @process.wait_ready
+    @process.wait_spawned
     m = read(timeout: READY_TIMEOUT)
     return if m == READY
 
@@ -82,7 +82,7 @@ class TNCL::Func::Function
   end
 
   def read_stderr
-    @process.wait_ready
+    @process.wait_spawned
     loop do
       output = read(from: :stderr)
       lines = output.split("\n")
@@ -97,7 +97,7 @@ class TNCL::Func::Function
   end
 
   def wait_fail
-    @process.wait_ready
+    @process.wait_spawned
     begin
       @process.wait
     rescue StandardError
