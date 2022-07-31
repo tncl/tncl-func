@@ -16,6 +16,8 @@ RSpec.describe TNCL::Func::Function do
     context "when image exists" do
       context "when container works properly" do
         let(:image) { "echo" }
+
+        include_examples "does not raise any exceptions"
       end
 
       context "when container prints wrong READY message" do
