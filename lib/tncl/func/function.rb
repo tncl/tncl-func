@@ -16,7 +16,6 @@ class TNCL::Func::Function
   class ImageNotFoundError < InitializationError; end
   class WrongReadyMessageError < InitializationError; end
 
-  DOCKER_RUN_COMMAND = ["docker", "run", "-i", "--rm", "--pull", "never"].freeze
   READY = "READY"
   READY_TIMEOUT = 5
 
