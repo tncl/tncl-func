@@ -57,9 +57,9 @@ module TNCL
 
       private
 
-      def read(from: :stdout, parse: true, timeout: nil)
+      def read(from: :stdout, timeout: nil)
         @process.read(from:, timeout:).strip.then do |d|
-          parse ? Base64.decode64(d) : d
+          from == :stdout ? Base64.decode64(d) : d
         end
       end
 
@@ -71,7 +71,7 @@ module TNCL
 
       def wait_ready
         @process.wait_ready
-        raise "ERROR" unless read(parse: false, timeout: READY_TIMEOUT) == READY
+        raise "ERROR" unless read(timeout: READY_TIMEOUT) == READY
       rescue ::Async::TimeoutError
         raise InitializationTimeoutError, "function '#{@name}' initialization timed out" if @process.running?
       rescue ::Async::Stop
@@ -81,7 +81,7 @@ module TNCL
       def read_stderr
         @process.wait_ready
         loop do
-          output = read(from: :stderr, parse: false)
+          output = read(from: :stderr)
           lines = output.split("\n")
           lines.each do |line|
             next parse_docker_error!(line) if line.start_with?("docker")
