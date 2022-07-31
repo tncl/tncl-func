@@ -13,10 +13,17 @@ Zeitwerk::Loader.eager_load_all
 # pp Dir["#{__dir__}}/support/**/*.rb"]
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
 
+shared_files = Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/base/*"]
+
 Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
-  FileUtils.copy("#{File.dirname(__FILE__)}/fixtures/fdk.rb", fn)
+  name = File.basename(fn)
+  next if name == "base" # skip shared for all functions stuff
+
+  shared_files.each do |f|
+    FileUtils.copy(f, fn)
+  end
+
   Dir.chdir(fn) do
-    name = File.basename(fn)
     `docker build . -t #{name}`
     next if $CHILD_STATUS.success?
 
