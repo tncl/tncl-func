@@ -29,6 +29,7 @@ GEM
       fiber-local
     dead_end (4.0.0)
     diff-lcs (1.5.0)
+    docile (1.4.0)
     fiber-local (1.0.0)
     iniparse (1.5.0)
     io-event (1.0.9)
@@ -79,6 +80,12 @@ GEM
     rubocop-rspec (2.12.1)
       rubocop (~> 1.31)
     ruby-progressbar (1.11.0)
+    simplecov (0.21.2)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.12.3)
+    simplecov_json_formatter (0.1.4)
     timers (4.3.3)
     unicode-display_width (2.2.0)
     zeitwerk (2.6.0)
@@ -95,6 +102,7 @@ DEPENDENCIES
   rubocop
   rubocop-performance
   rubocop-rspec
+  simplecov
   tncl-func!
 
 BUNDLED WITH

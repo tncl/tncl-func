@@ -6,6 +6,12 @@ require "fileutils"
 require "async/rspec"
 require "dead_end"
 
+require "simplecov"
+
+SimpleCov.start do
+  add_filter "spec"
+end
+
 require "tncl/func"
 
 Zeitwerk::Loader.eager_load_all

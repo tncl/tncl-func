@@ -13,6 +13,8 @@ gem "overcommit"
 
 gem "dead_end"
 
+gem "simplecov"
+
 gem "rubocop"
 gem "rubocop-performance"
 gem "rubocop-rspec"
