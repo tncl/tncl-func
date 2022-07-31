@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+source "https://www.rubygems.org"
+
+gem "async"
+
+group :development do
+  gem "rubocop"
+  gem "rubocop-performance"
+end
