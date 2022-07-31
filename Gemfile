@@ -11,6 +11,8 @@ gem "rspec", "~> 3.0"
 
 gem "overcommit"
 
+gem "dead_end"
+
 gem "rubocop"
 gem "rubocop-performance"
 gem "rubocop-rspec"

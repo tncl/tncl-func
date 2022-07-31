@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "async/rspec"
+require "dead_end"
 
 require "tncl/func"
+
+Zeitwerk::Loader.eager_load_all
 
 # pp Dir["#{__dir__}}/support/**/*.rb"]
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
