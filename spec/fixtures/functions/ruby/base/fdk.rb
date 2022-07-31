@@ -16,7 +16,10 @@ module TNCL
           ready!
 
           loop do
-            write(callable.call(read))
+            d = read
+            return if d.nil? || d == ""
+
+            write(callable.call(d))
           end
         end
       end
