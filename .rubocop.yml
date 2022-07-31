@@ -36,5 +36,12 @@ Metrics/MethodLength:
 RSpec/NestedGroups:
   Max: 10
 
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+  Exclude:
+    - lib/tncl/func.rb
+    - lib/tncl/func/version.rb
+    - spec/**/*
+
 # Style/ClassAndModuleChildren:
 #   EnforcedStyle: compact
