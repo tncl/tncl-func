@@ -30,7 +30,7 @@ module TNCL
       end
 
       def start
-        @process = ProcessRunner.new(*DOCKER_RUN_COMMAND, @image)
+        @process = Docker::Runner.new(@image)
 
         ready_waiter  = @parent.async { wait_ready }
         stderr_reader = @parent.async { read_stderr }
@@ -50,7 +50,7 @@ module TNCL
       def stop
         return unless @process.running?
 
-        @process.stop
+        @process.kill
 
         log_info { "Function #{@name} is stopping" }
       end
