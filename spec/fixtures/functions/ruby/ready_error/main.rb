@@ -3,6 +3,14 @@
 
 require_relative "fdk"
 
+module TNCL
+  module FDK
+    class << self
+      def ready! = write("BLAH BLAH")
+    end
+  end
+end
+
 def main(payload)
   payload
 end

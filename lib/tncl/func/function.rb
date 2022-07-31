@@ -16,6 +16,7 @@ module TNCL
       class InitializationTimeoutError < InitializationError; end
       class NotReadyError < InitializationError; end
       class ImageNotFoundError < InitializationError; end
+      class WrongReadyMessageError < InitializationError; end
 
       DOCKER_RUN_COMMAND = ["docker", "run", "-i", "--rm", "--pull", "never"].freeze
       READY = "READY"
@@ -66,12 +67,16 @@ module TNCL
       def parse_docker_error!(line)
         return unless line.include?("No such image")
 
-        raise ImageNotFoundError, "function '#{@name}' initialization failed: image '#{@image}' is not found"
+        raise ImageNotFoundError, "function '#{@name}': image '#{@image}' is not found"
       end
 
       def wait_ready
         @process.wait_ready
-        raise "ERROR" unless read(timeout: READY_TIMEOUT) == READY
+        m = read(timeout: READY_TIMEOUT)
+        return if m == READY
+
+        raise WrongReadyMessageError,
+              "function '#{@name}': wrong ready message. Expected: '#{READY}', received: '#{m[0..80]}'"
       rescue ::Async::TimeoutError
         raise InitializationTimeoutError, "function '#{@name}' initialization timed out" if @process.running?
       rescue ::Async::Stop

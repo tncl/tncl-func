@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require "base64"
+
+require "async"
+
 module TNCL
   module FDK
     class << self

@@ -24,6 +24,7 @@ Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
   end
 
   Dir.chdir(fn) do
+    puts("Building test function #{name}...")
     `docker build . -t #{name}`
     next if $CHILD_STATUS.success?
 
