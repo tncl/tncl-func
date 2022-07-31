@@ -25,11 +25,11 @@ class TNCL::Func::Function
     @name = name
     @image = image
     @parent = parent
+
+    @process = TNCL::Docker::Runner.new(@image)
   end
 
   def start
-    @process = TNCL::Docker::Runner.new(@image)
-
     ready_waiter  = @parent.async { wait_ready }
     stderr_reader = @parent.async { read_stderr }
     fail_waiter   = @parent.async { wait_fail }
