@@ -10,6 +10,12 @@ Zeitwerk::Loader.eager_load_all
 # pp Dir["#{__dir__}}/support/**/*.rb"]
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
 
+Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
+  Dir.chdir(fn) do
+    `docker build . -t #{File.basename(fn)}`
+  end
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
