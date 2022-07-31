@@ -91,7 +91,7 @@ module TNCL
           lines.each do |line|
             next parse_docker_error!(line) if line.start_with?("docker")
 
-            log_info { "Function output: #{line}" }
+            log_info { "Function '#{@name}':  output: #{line}" }
           end
         end
       rescue ::Async::Stop, ::Async::TimeoutError
@@ -100,8 +100,12 @@ module TNCL
 
       def wait_fail
         @process.wait_ready
-        @process.wait
-        raise InitializationError, "process quited"
+        begin
+          @process.wait
+        rescue StandardError
+          nil
+        end
+        raise InitializationError, "funciton '#{name}': process quited"
       rescue ::Async::Stop
         nil
       end
@@ -115,7 +119,7 @@ module TNCL
           done.wait
         rescue StandardError => e
           stop
-          log_info { "Function '#{@name}' failed to initialize: #{e}" }
+          log_info { "Function '#{@name}': failed to initialize: #{e}" }
           raise
         end
       end

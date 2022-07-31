@@ -8,7 +8,6 @@ RSpec.describe TNCL::Func::Function do
     function.stop
     function.wait
   end
-  # rubocop:disable RSpec/EmptyExampleGroup,RSpec/NestedGroups
 
   describe "#start" do
     subject { function.start }
@@ -35,7 +34,10 @@ RSpec.describe TNCL::Func::Function do
       end
 
       context "when container initialization fails" do
-        let(:image) { "initializaiton_fail" }
+        let(:image) { "init_fail" }
+
+        include_examples "raises an exception", described_class::InitializationError,
+                         "funciton 'init_fail': process quited"
       end
     end
 
@@ -46,5 +48,4 @@ RSpec.describe TNCL::Func::Function do
                        "function 'image-does-not-exist': image 'image-does-not-exist' is not found"
     end
   end
-  # rubocop:enable RSpec/EmptyExampleGroup,RSpec/NestedGroups
 end

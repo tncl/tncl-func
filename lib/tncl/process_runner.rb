@@ -34,7 +34,11 @@ module TNCL
       @process = ::Async::Process::Child.new(*@command, in: @stdin_r.io, out: @stdout_w.io, err: @stderr_w.io)
 
       @parent.async do
-        @process.wait
+        begin
+          @process.wait
+        rescue StandardError
+          nil
+        end
         @pipes.each(&:close)
         log_info { "Process #{@command} is stopped" }
       end
