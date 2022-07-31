@@ -9,3 +9,4 @@
 
 # rspec failure tracking
 .rspec_status
+spec/fixtures/functions/ruby/**/fdk.rb

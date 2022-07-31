@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "English"
+require "fileutils"
+
 require "async/rspec"
 require "dead_end"
 
@@ -11,8 +14,13 @@ Zeitwerk::Loader.eager_load_all
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
 
 Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
+  FileUtils.copy("#{File.dirname(__FILE__)}/fixtures/fdk.rb", fn)
   Dir.chdir(fn) do
-    `docker build . -t #{File.basename(fn)}`
+    name = File.basename(fn)
+    `docker build . -t #{name}`
+    next if $CHILD_STATUS.success?
+
+    raise "Cannot build function '#{name}'"
   end
 end
 
