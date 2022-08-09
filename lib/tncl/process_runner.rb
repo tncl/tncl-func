@@ -9,9 +9,23 @@ class TNCL::ProcessRunner
 
   class AlreadyRunningError < Error; end
 
+  class Child < Async::Process::Child
+    private
+
+    # override default behavior so that stopping awaiting routine does not stop the process
+    def wait_thread
+      @input.read(1)
+      ::Process.kill(:KILL, -@pid) if @exit_status.nil?
+
+      @thread.join
+      @input.close
+      @output.close
+    end
+  end
+
   attr_reader :command, :stdin, :stdout, :stderr
 
-  def_delegators :@process, :wait, :kill, :running?
+  def_delegators :@process, :kill, :running?
   def_delegators :@stdin, :write
   def_delegator :@spawned, :wait, :wait_spawned
 
@@ -30,17 +44,22 @@ class TNCL::ProcessRunner
 
     @spawned.signal
 
-    @process = ::Async::Process::Child.new(*@command, in: @stdin_r.io, out: @stdout_w.io, err: @stderr_w.io)
+    @process = Child.new(*@command, in: @stdin_r.io, out: @stdout_w.io, err: @stderr_w.io)
 
-    @parent.async do
-      begin
+    @task = @parent.async do
+      status = begin
         @process.wait
-      rescue StandardError
-        nil
+      rescue StandardError => e
+        e
       end
       @pipes.each(&:close)
-      log_info { "Process #{@command} is stopped" }
+      log_info { "Process #{@command} is stopped with status #{status}" }
     end
+  end
+
+  def wait
+    @process.wait
+    @task.wait
   end
 
   def read(from: :stdout, timeout: nil)

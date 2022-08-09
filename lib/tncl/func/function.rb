@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class TNCL::Func::Function
+class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
   extend Forwardable
 
   attr_reader :name, :image
@@ -16,41 +16,66 @@ class TNCL::Func::Function
   class ImageNotFoundError < InitializationError; end
   class WrongReadyMessageError < InitializationError; end
 
-  READY = "READY"
-  READY_TIMEOUT = 5
+  class ExecutionError < Error; end
+
+  class NotRunningError < ExecutionError; end
+  class ExecutionTimeoutError < ExecutionError; end
 
   def_delegator :@process, :wait
 
-  def initialize(name:, image:, parent: ::Async::Task.current)
+  READY = "READY"
+
+  def initialize(name:, image:, ready_timeout: 5, execution_timeout: 10, parent: ::Async::Task.current)
     @name = name
     @image = image
+
+    @ready_timeout = ready_timeout
+    @execution_timeout = execution_timeout
     @parent = parent
 
     @process = TNCL::Docker::Runner.new(@image)
   end
 
   def start
-    ready_waiter  = @parent.async { wait_ready }
+    ready_waiter = @parent.async { wait_ready }
     stderr_reader = @parent.async { read_stderr }
-    fail_waiter   = @parent.async { wait_fail }
+    fail_waiter = @parent.async { wait_fail }
 
     @process.spawn
 
-    wait_init(ready_waiter, stderr_reader, fail_waiter, stop_except: stderr_reader)
+    begin
+      wait_init(ready_waiter, stderr_reader, fail_waiter, stop_except: stderr_reader)
+    rescue StandardError => e
+      log_warn { "Function '#{@name}' initialization failed: #{e}" }
+      stop_wait
+      raise
+    end
 
-    log_info { "Function #{@name} is ready" }
+    log_info { "Function '#{@name}' is ready for execution." }
   end
 
   def call(payload)
-    @process.query("#{Base64.encode64(payload)}\n")
+    @parent.with_timeout(@execution_timeout) do
+      Base64.decode64(@process.query("#{Base64.encode64(payload)}\n"))
+    rescue Async::TimeoutError
+      log_warn { "Function '#{@name}' execution timed out" }
+      stop_wait
+      raise ExecutionTimeoutError
+    end
+  rescue IOError
+    raise NotRunningError
   end
 
   def stop
+    log_info { "Function '#{@name}' is stopping" }
     return unless @process.running?
 
     @process.kill
+  end
 
-    log_info { "Function #{@name} is stopping" }
+  def stop_wait
+    stop
+    wait
   end
 
   private
@@ -69,8 +94,9 @@ class TNCL::Func::Function
 
   def wait_ready
     @process.wait_spawned
-    m = read(timeout: READY_TIMEOUT)
-    return if m == READY
+    m = read(timeout: @ready_timeout)
+
+    return log_info { "Function '#{@name}' reported ready state." } if m == READY
 
     raise WrongReadyMessageError,
           "function '#{@name}': wrong ready message. Expected: '#{READY}', received: '#{m[0..80]}'"
@@ -115,7 +141,7 @@ class TNCL::Func::Function
     begin
       done.wait
     rescue StandardError => e
-      stop
+      stop_wait
       log_info { "Function '#{@name}': failed to initialize: #{e}" }
       raise
     end
