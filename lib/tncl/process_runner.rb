@@ -58,8 +58,9 @@ class TNCL::ProcessRunner
   end
 
   def wait
-    @process.wait
-    @task.wait
+    @process.wait.tap do
+      @task.wait
+    end
   end
 
   def read(from: :stdout, timeout: nil)

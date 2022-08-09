@@ -33,22 +33,20 @@ RSpec.configure do |config|
   config.include_context(Async::RSpec::Reactor)
 
   config.before(:suite) do
-    shared_files = Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/base/*"]
+    Sync do
+      shared_files = Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/base/*"]
 
-    Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
-      name = File.basename(fn)
-      next if name == "base" # skip shared for all functions stuff
+      Dir["#{File.dirname(__FILE__)}/fixtures/functions/ruby/*"].each do |fn|
+        name = File.basename(fn)
+        next if name == "base" # skip shared for all functions stuff
 
-      shared_files.each do |f|
-        FileUtils.copy(f, fn)
-      end
+        shared_files.each do |f|
+          FileUtils.copy(f, fn)
+        end
 
-      Dir.chdir(fn) do
-        puts("Building test function #{name}...")
-        `docker build . -t #{name}`
-        next if $CHILD_STATUS.success?
-
-        raise "Cannot build function '#{name}'"
+        b = TNCL::Docker::Builder.new(fn, name)
+        b.spawn
+        raise "Cannot build function '#{name}'" unless b.wait.success?
       end
     end
   end
