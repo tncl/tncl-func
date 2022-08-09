@@ -17,6 +17,7 @@ require "tncl/func"
 Zeitwerk::Loader.eager_load_all
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| load(f) }
+ENV["CONSOLE_LEVEL"] ||= "warn"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
