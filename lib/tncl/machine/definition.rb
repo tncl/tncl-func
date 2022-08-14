@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TNCL::Machine::Definition
-  attr_reader :states, :transitions, :default_state
+  attr_reader :states, :transitions, :default_state, :groups
 
   class InvalidConfigError < StandardError; end
 
@@ -22,9 +22,8 @@ class TNCL::Machine::Definition
     @states = {}
     @transitions = Hash.new { |h, k| h[k] = Set.new }
     @default_state = nil
+    @groups = {}
   end
-
-  def state?(name) = @states.include?(name)
 
   def state(name, final: false)
     state = State.new(name, final:)
@@ -32,7 +31,7 @@ class TNCL::Machine::Definition
 
     @default_state ||= state.name
 
-    raise ArgumentError, "state '#{name}' is already defined" if state?(name)
+    raise ArgumentError, "state '#{name}' is already defined" if @states.include?(name)
 
     @states[name] = state
   end
@@ -43,9 +42,23 @@ class TNCL::Machine::Definition
 
     validate_transition!(from, to)
 
-    from.product(to).each do |f, t|
-      @transitions[f] << t
+    from.product(to).each { @transitions[_1] << _2 }
+  end
+
+  def group(name, *states)
+    raise ArgumentError, "group '#{name}' is already defined" if @groups.include?(name)
+    raise ArgumentError, "group cannot be empty" if states.empty?
+
+    unknown_states = states.select{ !@states.include?(_1) }
+    raise ArgumentError, "states '#{unknown_states}' are unknown" if unknown_states.any?
+
+    states.each do |state|
+      @groups.each do |group, group_states|
+        raise ArgumentError, "state '#{state}' is already included in group '#{group}'" if group_states.include?(state)
+      end
     end
+
+    @groups[name] = states.to_set
   end
 
   def valid?
@@ -64,7 +77,7 @@ class TNCL::Machine::Definition
   private
 
   def validate_transition!(from, to)
-    unknown_states = (from + to).select{ !state?(_1) }
+    unknown_states = (from + to).select{ !@states.include?(_1) }
     raise ArgumentError, "states '#{unknown_states}' are unknown" if unknown_states.any?
 
     final_states = from.select{ @states[_1].final? }

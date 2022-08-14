@@ -130,62 +130,121 @@ RSpec.describe TNCL::Machine::Definition do
     end
   end
 
+  describe "#group" do
+    subject { definition.group(name, *states) }
+
+    let(:name) { :group }
+    let(:states) { [:initial_state, :final_state] }
+
+    before do
+      definition.state :initial_state
+      definition.state :final_state, final: true
+
+      definition.transition from: :initial_state, to: :final_state
+    end
+
+    context "when group is not yet defined" do
+      context "when states are not in other groups" do
+        it "adds a new group" do
+          expect { subject }.to change { definition.groups[name] }.from(nil).to([:initial_state, :final_state].to_set)
+        end
+      end
+
+      context "when states are in other groups" do
+        before do
+          definition.group :another_group, :final_state
+        end
+
+        include_examples "raises an exception",
+                         ArgumentError,
+                         "state 'final_state' is already included in group 'another_group'"
+      end
+
+      context "when states are unknown" do
+        let(:states) { [:unknown] }
+
+        include_examples "raises an exception", ArgumentError, "states '[:unknown]' are unknown"
+      end
+    end
+
+    context "when group is already defined" do
+      before do
+        definition.group(name, *states)
+      end
+
+      include_examples "raises an exception", ArgumentError, "group 'group' is already defined"
+    end
+  end
+
   describe "#validate!" do
     subject { definition.validate! }
 
-    context "when no states defined" do
-      include_examples "raises an exception",
-                       described_class::InvalidConfigError,
-                       "no states defined"
-    end
-
-    context "when only default state is defined" do
-      before do
-        definition.state :initial_state
-      end
-
-      include_examples "raises an exception",
-                       described_class::InvalidConfigError,
-                       "transitive states '[:initial_state]' have no outgoing transitions"
-    end
-
-    context "when no all states are reachable" do
+    context "when definition is valid" do
       before do
         definition.state :initial_state
         definition.state :final_state, final: true
+
+        definition.transition from: :initial_state, to: :final_state
       end
 
-      include_examples "raises an exception",
-                       described_class::InvalidConfigError,
-                       "states '[:final_state]' are not reachable"
+      include_examples "does not raise any exceptions"
     end
 
-    context "when a transitive state does not have outgoing transitions" do
-      before do
-        definition.state :initial_state
-        definition.state :transitive_state
-        definition.state :final_state, final: true
-
-        definition.transition from: :initial_state, to: [:transitive_state, :final_state]
+    context "when definition is invalid" do
+      context "when no states defined" do
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "no states defined"
       end
 
-      include_examples "raises an exception",
-                       described_class::InvalidConfigError,
-                       "transitive states '[:transitive_state]' have no outgoing transitions"
-    end
+      context "when only default state is defined" do
+        before do
+          definition.state :initial_state
+        end
 
-    context "when a state is unreachable" do
-      before do
-        definition.state :initial_state
-        definition.state :transitive_state
-        definition.state :final_state, final: true
-
-        definition.transition from: :initial_state, to: [:transitive_state]
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "transitive states '[:initial_state]' have no outgoing transitions"
       end
 
-      include_examples "raises an exception",
-                       described_class::InvalidConfigError,
-                       "states '[:final_state]' are not reachable"
+      context "when no all states are reachable" do
+        before do
+          definition.state :initial_state
+          definition.state :final_state, final: true
+        end
+
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "states '[:final_state]' are not reachable"
+      end
+
+      context "when a transitive state does not have outgoing transitions" do
+        before do
+          definition.state :initial_state
+          definition.state :transitive_state
+          definition.state :final_state, final: true
+
+          definition.transition from: :initial_state, to: [:transitive_state, :final_state]
+        end
+
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "transitive states '[:transitive_state]' have no outgoing transitions"
+      end
+
+      context "when a state is unreachable" do
+        before do
+          definition.state :initial_state
+          definition.state :transitive_state
+          definition.state :final_state, final: true
+
+          definition.transition from: :initial_state, to: [:transitive_state]
+        end
+
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "states '[:final_state]' are not reachable"
+      end
     end
   end
 end

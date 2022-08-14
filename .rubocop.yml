@@ -46,5 +46,8 @@ Style/ClassAndModuleChildren:
 RSpec/MultipleExpectations:
   Max: 3
 
+Style/NumberedParametersLimit:
+  Max: 2
+
 # Style/ClassAndModuleChildren:
 #   EnforcedStyle: compact
