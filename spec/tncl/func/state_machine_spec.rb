@@ -5,8 +5,12 @@ RSpec.describe TNCL::Func::StateMachine do
     Class.new do
       extend TNCL::Func::StateMachine
 
-      add_state_machine(:state) do
-        state :created, :ready, :failed, :stopped, :executing
+      add_state_machine do
+        state :created
+        state :ready
+        state :failed, final: true
+        state :stopped, final: true
+        state :executing, final: true
 
         transition from: [:created, :executing], to: :failed
         transition from: :created, to: :ready
@@ -15,7 +19,7 @@ RSpec.describe TNCL::Func::StateMachine do
       end
 
       def start(fail: false)
-        transit!(:state, fail ? :failed : :ready)
+        transit!(fail ? :failed : :ready)
       end
     end
   end

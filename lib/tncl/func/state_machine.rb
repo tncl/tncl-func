@@ -8,16 +8,28 @@ module TNCL::Func::StateMachine
   class Definition
     attr_reader :states, :transitions, :default_state
 
+    class State
+      attr_reader :name, :final
+
+      def initialize(name, final: false)
+        @name = name
+        @final = final
+      end
+    end
+
     def initialize
-      @states = Set.new
+      @states = {}
       @transitions = Hash.new { |h, k| h[k] = Set.new }
       @default_state = nil
     end
 
-    def state(*states)
-      @default_state ||= states.first
+    def state(name, final: false)
+      state = State.new(name, final:)
+      @default_state ||= state
 
-      @states += states.to_set
+      raise ArgumentError, "state '#{name}' already defined" if @states.key?(name)
+
+      @states[name] = state
     end
 
     def transition(from: @states, to: @states)
@@ -43,7 +55,7 @@ module TNCL::Func::StateMachine
   module InstanceMethods
     private
 
-    def transit!(name, new_state)
+    def transit!(new_state, name: :state)
       definition = send("#{name}_definition")
       current = send("current_#{name}")
       available = definition.transitions[current]
@@ -60,12 +72,12 @@ module TNCL::Func::StateMachine
 
   private
 
-  def add_state_machine(name, &) # rubocop:disable Metrics/MethodLength
+  def add_state_machine(name: :state, &block) # rubocop:disable Metrics/MethodLength
     @state_machines ||= {}
     raise ArgumentError, "machine '#{name}' is already defined" if @state_machines[name]
 
     Definition.new.tap do |definition|
-      definition.instance_eval(&)
+      definition.instance_eval(&block)
       definition_method = "#{name}_definition"
 
       self.class.define_method definition_method do
