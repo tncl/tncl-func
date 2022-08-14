@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe TNCL::Func::StateMachine do
+RSpec.describe TNCL::Machine::Machine do
   let(:klass) do
     Class.new do
-      extend TNCL::Func::StateMachine
+      extend TNCL::Machine::Machine
 
       add_state_machine do
         state :created
@@ -28,7 +28,7 @@ RSpec.describe TNCL::Func::StateMachine do
 
   shared_examples "returns state Definition" do
     it "returns an instance of Definition" do
-      expect(subject).to be_an_instance_of(described_class::Definition)
+      expect(subject).to be_an_instance_of(TNCL::Machine::Definition)
     end
   end
 

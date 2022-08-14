@@ -43,5 +43,8 @@ Style/ClassAndModuleChildren:
     - lib/tncl/func/version.rb
     - spec/**/*
 
+RSpec/MultipleExpectations:
+  Max: 3
+
 # Style/ClassAndModuleChildren:
 #   EnforcedStyle: compact
