@@ -31,6 +31,8 @@ class TNCL::Machine::Definition
 
     @default_state ||= state.name
 
+    raise ArgumentError, "state name '#{name}' is already taken by a group" if @groups.include?(name)
+
     raise ArgumentError, "state '#{name}' is already defined" if @states.include?(name)
 
     @states[name] = state
@@ -46,17 +48,8 @@ class TNCL::Machine::Definition
   end
 
   def group(name, *states)
-    raise ArgumentError, "group '#{name}' is already defined" if @groups.include?(name)
-    raise ArgumentError, "group cannot be empty" if states.empty?
-
-    unknown_states = states.select{ !@states.include?(_1) }
-    raise ArgumentError, "states '#{unknown_states}' are unknown" if unknown_states.any?
-
-    states.each do |state|
-      @groups.each do |group, group_states|
-        raise ArgumentError, "state '#{state}' is already included in group '#{group}'" if group_states.include?(state)
-      end
-    end
+    validate_group!(name)
+    validate_group_states!(states)
 
     @groups[name] = states.to_set
   end
@@ -76,6 +69,24 @@ class TNCL::Machine::Definition
 
   private
 
+  def validate_group!(name)
+    raise ArgumentError, "group name '#{name}' is already taken by a state" if @states.include?(name)
+    raise ArgumentError, "group '#{name}' is already defined" if @groups.include?(name)
+  end
+
+  def validate_group_states!(states)
+    raise ArgumentError, "group cannot be empty" if states.empty?
+
+    unknown_states = states.select{ !@states.include?(_1) }
+    raise ArgumentError, "states '#{unknown_states}' are unknown" if unknown_states.any?
+
+    states.each do |state|
+      @groups.each do |group, group_states|
+        raise ArgumentError, "state '#{state}' is already included in group '#{group}'" if group_states.include?(state)
+      end
+    end
+  end
+
   def validate_transition!(from, to)
     unknown_states = (from + to).select{ !@states.include?(_1) }
     raise ArgumentError, "states '#{unknown_states}' are unknown" if unknown_states.any?
@@ -91,8 +102,6 @@ class TNCL::Machine::Definition
   def validate_state_reachability!
     reachable_states = @transitions.values.reduce(&:+).to_a + [@default_state] # rubocop:disable Performance/Sum
     unreachable_states = @states.values.map(&:name).select{ !reachable_states.include?(_1) } # TODO: optimize me
-    return unless unreachable_states.any?
-
     return unless unreachable_states.any?
 
     raise InvalidConfigError, "states '#{unreachable_states}' are not reachable"

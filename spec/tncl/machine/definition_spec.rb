@@ -45,6 +45,19 @@ RSpec.describe TNCL::Machine::Definition do
       include_examples "raises an exception", ArgumentError, "state 'state' is already defined"
     end
 
+    context "when state name is already taken by a group" do
+      before do
+        definition.state :first_state
+        definition.state :second_state
+
+        definition.group :states, :first_state, :second_state
+      end
+
+      let(:name) { :states }
+
+      include_examples "raises an exception", ArgumentError, "state name 'states' is already taken by a group"
+    end
+
     context "when default state is final" do
       let(:final) { true }
 
@@ -173,6 +186,14 @@ RSpec.describe TNCL::Machine::Definition do
       end
 
       include_examples "raises an exception", ArgumentError, "group 'group' is already defined"
+    end
+
+    context "when group name is already taken by a state" do
+      before do
+        definition.state(:group)
+      end
+
+      include_examples "raises an exception", ArgumentError, "group name 'group' is already taken by a state"
     end
   end
 
