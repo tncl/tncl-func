@@ -17,13 +17,14 @@ RSpec.describe TNCL::Machine::Definition do
         end
 
         it "assigns default_state" do
-          expect { subject }.to change(definition, :default_state).from(nil).to(described_class::State)
-          expect(definition.default_state).to eq(subject)
+          expect { subject }.to change(definition, :default_state).from(nil).to(:state)
         end
       end
 
       context "when it's not the first added state" do
-        let!(:first_state) { definition.state(:first_state) }
+        before do
+          definition.state(:first_state)
+        end
 
         it "adds the state to the definition" do
           expect { subject }.to change { definition.states[name] }.from(nil).to(described_class::State)
@@ -32,7 +33,6 @@ RSpec.describe TNCL::Machine::Definition do
 
         it "does not change the assigned default state" do
           expect { subject }.not_to change(definition, :default_state)
-          expect(definition.default_state).to eq(first_state)
         end
       end
     end
@@ -43,6 +43,12 @@ RSpec.describe TNCL::Machine::Definition do
       end
 
       include_examples "raises an exception", ArgumentError, "state 'state' is already defined"
+    end
+
+    context "when default state is final" do
+      let(:final) { true }
+
+      include_examples "raises an exception", ArgumentError, "default state 'state' cannot be final"
     end
   end
 
@@ -98,6 +104,88 @@ RSpec.describe TNCL::Machine::Definition do
       let(:to) { :second_state }
 
       include_examples "raises an exception", ArgumentError, "states '[:third_state]' are defined as 'final'"
+    end
+  end
+
+  describe "#valid?" do
+    subject { definition.valid? }
+
+    context "when definition is valid" do
+      before do
+        definition.state :initial_state
+        definition.state :final_state, final: true
+
+        definition.transition from: :initial_state, to: :final_state
+      end
+
+      it "returns true" do
+        expect(subject).to be_truthy
+      end
+    end
+
+    context "when definition is invalid" do
+      it "returns false" do
+        expect(subject).to be_falsey
+      end
+    end
+  end
+
+  describe "#validate!" do
+    subject { definition.validate! }
+
+    context "when no states defined" do
+      include_examples "raises an exception",
+                       described_class::InvalidConfigError,
+                       "no states defined"
+    end
+
+    context "when only default state is defined" do
+      before do
+        definition.state :initial_state
+      end
+
+      include_examples "raises an exception",
+                       described_class::InvalidConfigError,
+                       "transitive states '[:initial_state]' have no outgoing transitions"
+    end
+
+    context "when no all states are reachable" do
+      before do
+        definition.state :initial_state
+        definition.state :final_state, final: true
+      end
+
+      include_examples "raises an exception",
+                       described_class::InvalidConfigError,
+                       "states '[:final_state]' are not reachable"
+    end
+
+    context "when a transitive state does not have outgoing transitions" do
+      before do
+        definition.state :initial_state
+        definition.state :transitive_state
+        definition.state :final_state, final: true
+
+        definition.transition from: :initial_state, to: [:transitive_state, :final_state]
+      end
+
+      include_examples "raises an exception",
+                       described_class::InvalidConfigError,
+                       "transitive states '[:transitive_state]' have no outgoing transitions"
+    end
+
+    context "when a state is unreachable" do
+      before do
+        definition.state :initial_state
+        definition.state :transitive_state
+        definition.state :final_state, final: true
+
+        definition.transition from: :initial_state, to: [:transitive_state]
+      end
+
+      include_examples "raises an exception",
+                       described_class::InvalidConfigError,
+                       "states '[:final_state]' are not reachable"
     end
   end
 end

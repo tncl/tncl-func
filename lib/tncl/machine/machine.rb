@@ -31,6 +31,7 @@ module TNCL::Machine::Machine
 
     TNCL::Machine::Definition.new.tap do |definition|
       definition.instance_eval(&block)
+      definition.validate!
       definition_method = "#{name}_definition"
 
       self.class.define_method definition_method do

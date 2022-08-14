@@ -10,12 +10,13 @@ RSpec.describe TNCL::Machine::Machine do
         state :ready
         state :failed, final: true
         state :stopped, final: true
-        state :executing, final: true
+        state :executing
+        state :paused
 
         transition from: [:created, :executing], to: :failed
         transition from: :created, to: :ready
-        transition from: :ready, to: [:stopped, :executing]
-        transition from: :executing, to: :ready
+        transition from: :ready, to: [:stopped, :executing, :paused]
+        transition from: [:paused, :executing], to: :ready
       end
 
       def start(fail: false)
