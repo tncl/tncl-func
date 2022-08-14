@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class TNCL::Machine::Definition
-  attr_reader :states, :transitions, :default_state, :groups
+  attr_reader :states, :transitions, :default_state, :groups, :enter_callbacks
 
   class InvalidConfigError < StandardError; end
 
@@ -18,11 +18,22 @@ class TNCL::Machine::Definition
     def ==(other) = @name == other.name && @final == other.final?
   end
 
-  def initialize
+  class Callback
+    attr_reader :on_fail, :block
+
+    def initialize(on_fail: nil, &block)
+      @on_fail = on_fail || -> {}
+      @block = block
+    end
+  end
+
+  def initialize(name)
+    @name = name
     @states = {}
     @transitions = Hash.new { |h, k| h[k] = Set.new }
     @default_state = nil
     @groups = {}
+    @enter_callbacks = {}
   end
 
   def state(name, final: false)
@@ -54,6 +65,15 @@ class TNCL::Machine::Definition
     @groups[name] = states.to_set
   end
 
+  def to_enter(state, on_fail: nil, &block)
+    raise ArgumentError, "state '#{state}' already has a to_enter callback" if @enter_callbacks.include?(state)
+    raise ArgumentError, "state '#{state}' is unknown" unless @states.include?(state)
+
+    on_fail = -> { transit!(on_fail, name: @name) } if on_fail.is_a?(Symbol)
+
+    @enter_callbacks[state] = Callback.new(on_fail:, &block)
+  end
+
   def valid?
     validate!
     true
@@ -65,6 +85,7 @@ class TNCL::Machine::Definition
     validate_states!
     validate_state_reachability!
     validate_transitive_states!
+    # TODO: at least one final state must be defined
   end
 
   private

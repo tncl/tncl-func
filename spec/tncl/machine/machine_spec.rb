@@ -13,6 +13,8 @@ RSpec.describe TNCL::Machine::Machine do
         state :executing
         state :paused
 
+        group :terminated, :stopped, :failed
+
         transition from: [:created, :executing], to: :failed
         transition from: :created, to: :ready
         transition from: :ready, to: [:stopped, :executing, :paused]

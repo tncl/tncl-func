@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe TNCL::Machine::Definition do
-  let(:definition) { described_class.new }
+  let(:definition) { described_class.new(:state) }
 
   describe "#state" do
     subject { definition.state(name, final:) }
@@ -194,6 +194,43 @@ RSpec.describe TNCL::Machine::Definition do
       end
 
       include_examples "raises an exception", ArgumentError, "group name 'group' is already taken by a state"
+    end
+  end
+
+  describe "#to_enter" do
+    subject { definition.to_enter name, on_fail:, &block }
+
+    before do
+      definition.state :initial_state
+      definition.state :final_state, final: true
+    end
+
+    let(:name) { :final_state }
+    let(:on_fail) { nil }
+    let(:block) { -> {} }
+
+    context "when to_enter callback is not already defined" do
+      context "when state is known" do
+        it "adds a to_enter callback" do
+          expect { subject }.to change {
+                                  definition.enter_callbacks[:final_state]
+                                }.from(nil).to(described_class::Callback)
+        end
+      end
+
+      context "when state is unknown" do
+        let(:name) { :unknown }
+
+        include_examples "raises an exception", ArgumentError, "state 'unknown' is unknown"
+      end
+    end
+
+    context "when to_enter callback is already defined" do
+      before do
+        definition.to_enter name, on_fail:, &block
+      end
+
+      include_examples "raises an exception", ArgumentError, "state 'final_state' already has a to_enter callback"
     end
   end
 
