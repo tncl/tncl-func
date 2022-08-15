@@ -13,12 +13,22 @@ module TNCL::Machine::Machine
       current = send("current_#{name}")
       available = definition.transitions[current]
       if available.include?(new_state)
-        run_on_enter(new_state, args:, params:)
+        run_on_enter(new_state, args:, params:, name:)
         return instance_variable_set("@current_#{name}", new_state) if available.include?(new_state)
       end
 
       raise TransitionFailed,
             "cannot transit '#{name}' to '#{new_state}' from '#{current}'. Avaliable transitions: '#{available.to_a}'"
+    end
+
+    def run_on_enter(new_state, args:, params:, name:)
+      enter_callback = public_send("#{name}_definition").enter_callbacks[new_state]
+      return if enter_callback.nil?
+
+      instance_exec(*args, **params, &enter_callback.block)
+    rescue StandardError
+      instance_exec(&enter_callback.on_fail)
+      raise
     end
   end
 
@@ -28,22 +38,12 @@ module TNCL::Machine::Machine
 
   private
 
-  def run_on_enter(new_state)
-    enter_callback = definition.enter_callbacks[new_state]
-    return if enter_callback.nil?
-
-    instance_eval(*args, **params, &enter_callback.block)
-  rescue StandardError
-    instance_eval(&enter_callback.on_fail)
-    raise
-  end
-
   def add_state_machine(name: :state, &block) # rubocop:disable Metrics/MethodLength
     @state_machines ||= {}
     raise ArgumentError, "machine '#{name}' is already defined" if @state_machines[name]
 
     TNCL::Machine::Definition.new(name).tap do |definition|
-      definition.instance_eval(&block)
+      definition.instance_exec(&block)
       definition.validate!
       definition_method = "#{name}_definition"
 

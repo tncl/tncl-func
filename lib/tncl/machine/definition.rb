@@ -69,7 +69,10 @@ class TNCL::Machine::Definition
     raise ArgumentError, "state '#{state}' already has a to_enter callback" if @enter_callbacks.include?(state)
     raise ArgumentError, "state '#{state}' is unknown" unless @states.include?(state)
 
-    on_fail = -> { transit!(on_fail, name: @name) } if on_fail.is_a?(Symbol)
+    name = @name
+    on_fail_state = on_fail
+
+    on_fail = -> { transit!(on_fail_state, name:) } if on_fail.is_a?(Symbol)
 
     @enter_callbacks[state] = Callback.new(on_fail:, &block)
   end
