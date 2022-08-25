@@ -209,7 +209,7 @@ RSpec.describe TNCL::Machine::Definition do
     let(:on_fail) { nil }
     let(:block) { -> {} }
 
-    context "when to_enter callback is not already defined" do
+    context "when to_enter callback is not yet defined" do
       context "when state is known" do
         it "adds a to_enter callback" do
           expect { subject }.to change {
@@ -231,6 +231,13 @@ RSpec.describe TNCL::Machine::Definition do
       end
 
       include_examples "raises an exception", ArgumentError, "state 'final_state' already has a to_enter callback"
+    end
+
+    context "when on_fail is equal to the target state" do
+      let(:on_fail) { name }
+
+      include_examples "raises an exception", ArgumentError,
+                       "failed state 'final_state' cannot be equal to the target state"
     end
   end
 
@@ -296,12 +303,26 @@ RSpec.describe TNCL::Machine::Definition do
           definition.state :transitive_state
           definition.state :final_state, final: true
 
-          definition.transition from: :initial_state, to: [:transitive_state]
+          definition.transition from: :initial_state, to: :transitive_state
         end
 
         include_examples "raises an exception",
                          described_class::InvalidConfigError,
                          "states '[:final_state]' are not reachable"
+      end
+
+      context "when machine does not have final state" do
+        before do
+          definition.state :initial_state
+          definition.state :transitive_state
+
+          definition.transition from: :initial_state, to: :transitive_state
+          definition.transition from: :transitive_state, to: :initial_state
+        end
+
+        include_examples "raises an exception",
+                         described_class::InvalidConfigError,
+                         "at least one final state must be defined"
       end
     end
   end

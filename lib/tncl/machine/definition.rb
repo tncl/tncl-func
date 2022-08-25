@@ -65,10 +65,10 @@ class TNCL::Machine::Definition
     @groups[name] = states.to_set
   end
 
-  # TODO: state != on_fail
   def to_enter(state, on_fail: nil, &block)
     raise ArgumentError, "state '#{state}' already has a to_enter callback" if @enter_callbacks.include?(state)
     raise ArgumentError, "state '#{state}' is unknown" unless @states.include?(state)
+    raise ArgumentError, "failed state '#{on_fail}' cannot be equal to the target state" if state == on_fail
 
     name = @name
     on_fail_state = on_fail
@@ -89,7 +89,7 @@ class TNCL::Machine::Definition
     validate_states!
     validate_state_reachability!
     validate_transitive_states!
-    # TODO: at least one final state must be defined
+    validate_final_states!
   end
 
   private
@@ -137,5 +137,11 @@ class TNCL::Machine::Definition
     return unless transitive_states.any?
 
     raise InvalidConfigError, "transitive states '#{transitive_states}' have no outgoing transitions"
+  end
+
+  def validate_final_states!
+    return if @states.values.any?(&:final?)
+
+    raise InvalidConfigError, "at least one final state must be defined"
   end
 end
