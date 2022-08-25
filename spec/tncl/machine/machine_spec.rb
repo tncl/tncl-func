@@ -42,9 +42,7 @@ RSpec.describe TNCL::Machine::Machine do
     subject { instance.current_state_group }
 
     context "when current state is not in a group" do
-      it "returns nil" do
-        expect(subject).to be_nil
-      end
+      include_examples "returns nil"
     end
 
     context "when current state is in a group" do
@@ -65,17 +63,13 @@ RSpec.describe TNCL::Machine::Machine do
       context "when machine is in state" do
         let(:name) { :created }
 
-        it "returns true" do
-          expect(subject).to be_truthy
-        end
+        include_examples "returns true"
       end
 
       context "when machine is not in state" do
         let(:name) { :failed }
 
-        it "returns false" do
-          expect(subject).to be_falsey
-        end
+        include_examples "returns false"
       end
     end
 
@@ -87,15 +81,11 @@ RSpec.describe TNCL::Machine::Machine do
           instance.transit!(:failed)
         end
 
-        it "returns true" do
-          expect(subject).to be_truthy
-        end
+        include_examples "returns true"
       end
 
       context "when machine is not in state in group" do
-        it "returns false" do
-          expect(subject).to be_falsey
-        end
+        include_examples "returns false"
       end
     end
 
