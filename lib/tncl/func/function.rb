@@ -100,7 +100,7 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
   end
 
   def stop
-    transit!(:stopped) unless current_group == :terminated
+    transit!(:stopped) unless current_state_group == :terminated
   end
 
   private

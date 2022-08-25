@@ -14,7 +14,7 @@ module TNCL::Machine::Machine
       @current_state = state_definition.default_state
     end
 
-    def current_group
+    def current_state_group
       state_definition.groups.find{ _2.include?(current_state) }&.first
     end
 

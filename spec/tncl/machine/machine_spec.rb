@@ -28,7 +28,7 @@ RSpec.describe TNCL::Machine::Machine do
 
       # make some private methods public for testing
       public :transit!
-      public :current_group
+      public :current_state_group
       public :current_state
       public :state_definition
     end
@@ -37,8 +37,8 @@ RSpec.describe TNCL::Machine::Machine do
   let(:on_fail) { nil }
   let(:on_ready_block) { -> {} }
 
-  describe "#current_group" do
-    subject { instance.current_group }
+  describe "#current_state_group" do
+    subject { instance.current_state_group }
 
     context "when current state is not in a group" do
       it "returns nil" do
