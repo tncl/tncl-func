@@ -105,6 +105,10 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
     transit!(:stopped) unless in_state?(:terminated)
   end
 
+  def ready? = in_state?(:idle)
+
+  def stopped? = in_state?(:terminated)
+
   private
 
   def stop!

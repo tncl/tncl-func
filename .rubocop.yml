@@ -49,5 +49,8 @@ RSpec/MultipleExpectations:
 Style/NumberedParametersLimit:
   Max: 2
 
+RSpec/ExampleLength:
+  Max: 10
+
 # Style/ClassAndModuleChildren:
 #   EnforcedStyle: compact

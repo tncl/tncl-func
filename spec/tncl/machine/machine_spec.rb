@@ -112,7 +112,7 @@ RSpec.describe TNCL::Machine::Machine do
           expect { subject }.to change(instance, :current_state).from(:created).to(:ready)
         end
 
-        it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations, RSpec/ExampleLength
+        it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations
           subject
           expect(on_ready_block).to be_called
           expect(on_ready_block.args).to eq(args)
@@ -128,7 +128,7 @@ RSpec.describe TNCL::Machine::Machine do
         context "when on_fail is nil" do
           include_examples "raises an exception", RuntimeError, "test error"
 
-          it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations, RSpec/ExampleLength
+          it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations
             subject rescue nil # rubocop:disable Style/RescueModifier
             expect(on_ready_block).to be_called
             expect(on_ready_block.args).to eq(args)
@@ -147,7 +147,7 @@ RSpec.describe TNCL::Machine::Machine do
 
           include_examples "raises an exception", RuntimeError, "test error"
 
-          it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations, RSpec/ExampleLength
+          it "calls on_enter callback" do # rubocop:disable RSpec/MultipleExpectations
             subject rescue nil # rubocop:disable Style/RescueModifier
             expect(on_ready_block).to be_called
             expect(on_ready_block.args).to eq(args)

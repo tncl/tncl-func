@@ -8,6 +8,30 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
     function.stop
   end
 
+  shared_examples "moves to stopped state" do
+    it "moves to stopped state" do
+      begin
+        subject
+      rescue StandardError
+        nil
+      end
+
+      expect(function.stopped?).to be(true)
+    end
+  end
+
+  shared_examples "moves to ready state" do
+    it "moves to ready state" do
+      begin
+        subject
+      rescue StandardError
+        nil
+      end
+
+      expect(function.ready?).to be(true)
+    end
+  end
+
   describe "#start" do
     subject { function.start }
 
@@ -16,6 +40,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
         let(:image) { "echo" }
 
         include_examples "does not raise any exceptions"
+        include_examples "moves to ready state"
       end
 
       context "when container prints wrong READY message" do
@@ -23,6 +48,8 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
 
         include_examples "raises an exception", described_class::WrongReadyMessageError,
                          "function 'ready_error': wrong ready message. Expected: 'READY', received: 'BLAH BLAH'"
+
+        include_examples "moves to stopped state"
       end
 
       context "when container does not print READY in time" do
@@ -30,6 +57,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
 
         include_examples "raises an exception", described_class::InitializationTimeoutError,
                          "function 'ready_timeout': initialization timed out"
+        include_examples "moves to stopped state"
       end
 
       context "when container initialization fails" do
@@ -37,6 +65,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
 
         include_examples "raises an exception", described_class::InitializationError,
                          "funciton 'init_fail': process quited"
+        include_examples "moves to stopped state"
       end
     end
 
@@ -45,6 +74,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
 
       include_examples "raises an exception", described_class::ImageNotFoundError,
                        "function 'image-does-not-exist': image 'image-does-not-exist' is not found"
+      include_examples "moves to stopped state"
     end
   end
 
@@ -63,6 +93,8 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
           expect(function.call(load)).to eq(load)
         end
       end
+
+      include_examples "moves to ready state"
     end
 
     context "when initialization failed" do
@@ -85,6 +117,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
       end
 
       include_examples "raises an exception", described_class::ExecutionTimeoutError
+      include_examples "moves to stopped state"
     end
   end
 end
