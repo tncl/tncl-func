@@ -26,30 +26,16 @@ RSpec.describe TNCL::Machine::Machine do
         to_enter :ready, on_fail: of, &orb
       end
 
-      public :transit! # make private `transit!` public to simplify testing
+      # make some private methods public for testing
+      public :transit!
+      public :current_group
+      public :current_state
+      public :state_definition
     end
   end
   let(:instance) { klass.new }
   let(:on_fail) { nil }
   let(:on_ready_block) { -> {} }
-
-  shared_examples "returns state Definition" do
-    it "returns an instance of Definition" do
-      expect(subject).to be_an_instance_of(TNCL::Machine::Definition)
-    end
-  end
-
-  describe ".state_definition" do
-    subject { klass.state_definition }
-
-    include_examples "returns state Definition"
-  end
-
-  describe "#state_definition" do
-    subject { instance.state_definition }
-
-    include_examples "returns state Definition"
-  end
 
   describe "#current_group" do
     subject { instance.current_group }

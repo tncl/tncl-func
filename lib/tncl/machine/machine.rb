@@ -5,12 +5,8 @@ module TNCL::Machine::Machine
 
   class TransitionFailed < Error; end
 
-  attr_reader :state_definition
-
   module InstanceMethods
-    def state_definition
-      self.class.state_definition
-    end
+    private
 
     def current_state
       return @current_state if @current_state
@@ -21,8 +17,6 @@ module TNCL::Machine::Machine
     def current_group
       state_definition.groups.find{ _2.include?(current_state) }&.first
     end
-
-    private
 
     def transit!(new_state, args: [], params: {})
       available = state_definition.transitions[current_state]
@@ -59,6 +53,10 @@ module TNCL::Machine::Machine
     @state_definition = TNCL::Machine::Definition.new(name).tap do |definition|
       definition.instance_exec(&block)
       definition.validate!
+
+      define_method(:state_definition) do
+        definition
+      end
     end
   end
 end
