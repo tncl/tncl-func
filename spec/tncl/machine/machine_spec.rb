@@ -51,7 +51,27 @@ RSpec.describe TNCL::Machine::Machine do
     include_examples "returns state Definition"
   end
 
-  describe ".transit!" do
+  describe "#current_group" do
+    subject { instance.current_group }
+
+    context "when current state is not in a group" do
+      it "returns nil" do
+        expect(subject).to be_nil
+      end
+    end
+
+    context "when current state is in a group" do
+      before do
+        instance.transit!(:failed)
+      end
+
+      it "returns group name" do
+        expect(subject).to eq(:terminated)
+      end
+    end
+  end
+
+  describe "#transit!" do
     subject { instance.transit!(new_state, args:, params:) }
 
     let(:args) { [:arg] }
