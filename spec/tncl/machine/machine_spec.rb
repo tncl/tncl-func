@@ -117,6 +117,13 @@ RSpec.describe TNCL::Machine::Machine do
         end
       end
     end
+
+    context "when new state is not allowed" do
+      let(:new_state) { :paused }
+
+      include_examples "raises an exception", TNCL::Machine::Machine::TransitionFailed,
+                       "cannot transit state to 'paused' from 'created'. Avaliable transitions: '[:failed, :ready]'"
+    end
   end
 end
 # rubocop:enable RSpec/MultipleMemoizedHelpers
