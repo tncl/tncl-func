@@ -8,6 +8,15 @@ module TNCL::Machine::Machine
   module InstanceMethods
     private
 
+    def in_state?(name)
+      unless state_definition.states.include?(name) || state_definition.groups.include?(name)
+        raise ArgumentError,
+              "Unknown group or state '#{name}'. Available states: '#{state_definition.states.keys}'. Available groups: '#{state_definition.groups.keys}'" # rubocop:disable Layout/LineLength
+      end
+
+      current_state == name || current_state_group == name
+    end
+
     def current_state
       return @current_state if @current_state
 

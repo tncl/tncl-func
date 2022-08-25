@@ -31,6 +31,7 @@ RSpec.describe TNCL::Machine::Machine do
       public :current_state_group
       public :current_state
       public :state_definition
+      public :in_state?
     end
   end
   let(:instance) { klass.new }
@@ -54,6 +55,54 @@ RSpec.describe TNCL::Machine::Machine do
       it "returns group name" do
         expect(subject).to eq(:terminated)
       end
+    end
+  end
+
+  describe "#in_state?" do
+    subject { instance.in_state?(name) }
+
+    context "when name is a state" do
+      context "when machine is in state" do
+        let(:name) { :created }
+
+        it "returns true" do
+          expect(subject).to be_truthy
+        end
+      end
+
+      context "when machine is not in state" do
+        let(:name) { :failed }
+
+        it "returns false" do
+          expect(subject).to be_falsey
+        end
+      end
+    end
+
+    context "when name is a group" do
+      let(:name) { :terminated }
+
+      context "when machine is in state in group" do
+        before do
+          instance.transit!(:failed)
+        end
+
+        it "returns true" do
+          expect(subject).to be_truthy
+        end
+      end
+
+      context "when machine is not in state in group" do
+        it "returns false" do
+          expect(subject).to be_falsey
+        end
+      end
+    end
+
+    context "when state or group is unknown" do
+      let(:name) { "unknown" }
+
+      include_examples "raises an exception", ArgumentError, "Unknown group or state 'unknown'. Available states: '[:created, :ready, :failed, :stopped, :executing, :paused]'. Available groups: '[:terminated]'" # rubocop:disable Layout/LineLength
     end
   end
 
