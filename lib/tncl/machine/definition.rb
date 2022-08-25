@@ -27,8 +27,7 @@ class TNCL::Machine::Definition
     end
   end
 
-  def initialize(name)
-    @name = name
+  def initialize(*)
     @states = {}
     @transitions = Hash.new { |h, k| h[k] = Set.new }
     @default_state = nil
@@ -70,10 +69,9 @@ class TNCL::Machine::Definition
     raise ArgumentError, "state '#{state}' is unknown" unless @states.include?(state)
     raise ArgumentError, "failed state '#{on_fail}' cannot be equal to the target state" if state == on_fail
 
-    name = @name
     on_fail_state = on_fail
 
-    on_fail = ->(e) { transit!(on_fail_state, name:, args: [e]) } if on_fail.is_a?(Symbol)
+    on_fail = ->(e) { transit!(on_fail_state, args: [e]) } if on_fail.is_a?(Symbol)
 
     @enter_callbacks[state] = Callback.new(on_fail:, &block)
   end
