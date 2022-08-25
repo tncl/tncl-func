@@ -5,7 +5,7 @@ RSpec.describe TNCL::Func::Function, timeout: 15 do
   let(:name) { image }
 
   after do
-    function.stop_wait
+    function.stop
   end
 
   describe "#start" do

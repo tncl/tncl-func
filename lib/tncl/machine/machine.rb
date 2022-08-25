@@ -13,8 +13,9 @@ module TNCL::Machine::Machine
       current = send("current_#{name}")
       available = definition.transitions[current]
       if available.include?(new_state)
-        run_on_enter(new_state, args:, params:, name:)
-        return instance_variable_set("@current_#{name}", new_state) if available.include?(new_state)
+        return run_on_enter(new_state, args:, params:, name:).tap do
+          instance_variable_set("@current_#{name}", new_state) if available.include?(new_state)
+        end
       end
 
       raise TransitionFailed,
@@ -26,8 +27,8 @@ module TNCL::Machine::Machine
       return if enter_callback.nil?
 
       instance_exec(*args, **params, &enter_callback.block)
-    rescue StandardError
-      instance_exec(&enter_callback.on_fail)
+    rescue StandardError => e
+      instance_exec(e, &enter_callback.on_fail)
       raise
     end
   end

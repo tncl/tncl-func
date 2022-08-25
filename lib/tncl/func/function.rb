@@ -23,6 +23,56 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
 
   def_delegator :@process, :wait
 
+  extend TNCL::Machine::Machine
+
+  add_state_machine do # rubocop:disable Metrics/BlockLength
+    state :created
+    state :ready
+    state :failed, final: true
+    state :stopped, final: true
+    state :executing
+    state :idle
+
+    group :terminated, :stopped, :failed
+    group :ready_for_execution, :ready, :idle
+
+    transition from: [:created, :executing], to: :failed
+    transition from: :created, to: :ready
+    transition from: :ready, to: [:stopped, :idle]
+    transition from: :idle, to: [:stopped, :executing]
+    transition from: :executing, to: :idle
+
+    to_enter :ready, on_fail: :failed do
+      ready_waiter = @parent.async { wait_ready }
+      stderr_reader = @parent.async { read_stderr }
+      fail_waiter = @parent.async { wait_fail }
+
+      @process.spawn
+      wait_init(ready_waiter, stderr_reader, fail_waiter, stop_except: stderr_reader)
+      log_info { "Function '#{@name}' is ready for execution." }
+    end
+
+    to_enter :failed do |e|
+      log_warn { "Function '#{@name}' failed: #{e}" }
+      stop!
+    end
+
+    to_enter :stopped do
+      log_info { "Function '#{@name}' is stopping" }
+      stop!
+    end
+
+    to_enter :executing do |payload|
+      @parent.with_timeout(@execution_timeout) do
+        Base64.decode64(@process.query("#{Base64.encode64(payload)}\n"))
+      rescue Async::TimeoutError
+        log_warn { "Function '#{@name}' execution timed out" }
+        stop
+        raise ExecutionTimeoutError
+      end
+    end
+  end
+
   READY = "READY"
 
   def initialize(name:, image:, ready_timeout: 5, execution_timeout: 10, parent: ::Async::Task.current)
@@ -37,48 +87,30 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
   end
 
   def start
-    ready_waiter = @parent.async { wait_ready }
-    stderr_reader = @parent.async { read_stderr }
-    fail_waiter = @parent.async { wait_fail }
-
-    @process.spawn
-
-    begin
-      wait_init(ready_waiter, stderr_reader, fail_waiter, stop_except: stderr_reader)
-    rescue StandardError => e
-      log_warn { "Function '#{@name}' initialization failed: #{e}" }
-      stop_wait
-      raise
-    end
-
-    log_info { "Function '#{@name}' is ready for execution." }
+    transit!(:ready)
+    transit!(:idle)
   end
 
   def call(payload)
-    @parent.with_timeout(@execution_timeout) do
-      Base64.decode64(@process.query("#{Base64.encode64(payload)}\n"))
-    rescue Async::TimeoutError
-      log_warn { "Function '#{@name}' execution timed out" }
-      stop_wait
-      raise ExecutionTimeoutError
+    transit!(:executing, args: [payload]).tap do
+      transit!(:idle)
     end
-  rescue IOError
+  rescue TNCL::Machine::Machine::TransitionFailed
     raise NotRunningError
   end
 
   def stop
-    log_info { "Function '#{@name}' is stopping" }
-    return unless @process.running?
-
-    @process.kill
-  end
-
-  def stop_wait
-    stop
-    wait
+    transit!(:stopped) unless current_state == :stopped || current_state == :failed
   end
 
   private
+
+  def stop!
+    return unless @process.running?
+
+    @process.kill
+    wait
+  end
 
   def read(from: :stdout, timeout: nil)
     @process.read(from:, timeout:).strip.then do |d|
@@ -138,12 +170,6 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
 
     done, pending = TNCL::Async.wait_first(*tasks, parent: @parent)
     (pending - stop_except).each(&:stop).each(&:wait)
-    begin
-      done.wait
-    rescue StandardError => e
-      stop_wait
-      log_info { "Function '#{@name}': failed to initialize: #{e}" }
-      raise
-    end
+    done.wait
   end
 end

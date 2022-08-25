@@ -22,7 +22,7 @@ class TNCL::Machine::Definition
     attr_reader :on_fail, :block
 
     def initialize(on_fail: nil, &block)
-      @on_fail = on_fail || -> {}
+      @on_fail = on_fail || ->(*, **) {}
       @block = block
     end
   end
@@ -65,6 +65,7 @@ class TNCL::Machine::Definition
     @groups[name] = states.to_set
   end
 
+  # TODO: state != on_fail
   def to_enter(state, on_fail: nil, &block)
     raise ArgumentError, "state '#{state}' already has a to_enter callback" if @enter_callbacks.include?(state)
     raise ArgumentError, "state '#{state}' is unknown" unless @states.include?(state)
@@ -72,7 +73,7 @@ class TNCL::Machine::Definition
     name = @name
     on_fail_state = on_fail
 
-    on_fail = -> { transit!(on_fail_state, name:) } if on_fail.is_a?(Symbol)
+    on_fail = ->(e) { transit!(on_fail_state, name:, args: [e]) } if on_fail.is_a?(Symbol)
 
     @enter_callbacks[state] = Callback.new(on_fail:, &block)
   end
