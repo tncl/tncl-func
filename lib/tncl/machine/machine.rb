@@ -3,7 +3,16 @@
 module TNCL::Machine::Machine
   class Error < TNCL::Func::Error; end
 
-  class TransitionFailed < Error; end
+  class TransitionFailed < Error
+    attr_reader :current_state, :new_state, :possible_states
+
+    def initialize(current, new, possible)
+      super("cannot transit state to '#{new}' from '#{current}'. Possible transitions: '#{possible.to_a}'")
+      @current_state = current
+      @new_state = new
+      @possible_states = possible
+    end
+  end
 
   module InstanceMethods
     private
@@ -35,8 +44,7 @@ module TNCL::Machine::Machine
         end
       end
 
-      raise TransitionFailed,
-            "cannot transit state to '#{new_state}' from '#{current_state}'. Avaliable transitions: '#{available.to_a}'"
+      raise TransitionFailed.new(current_state, new_state, available)
     end
 
     def run_on_enter(new_state, args:, params:)

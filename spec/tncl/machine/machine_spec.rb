@@ -167,7 +167,7 @@ RSpec.describe TNCL::Machine::Machine do
       let(:new_state) { :paused }
 
       include_examples "raises an exception", TNCL::Machine::Machine::TransitionFailed,
-                       "cannot transit state to 'paused' from 'created'. Avaliable transitions: '[:failed, :ready]'"
+                       "cannot transit state to 'paused' from 'created'. Possible transitions: '[:failed, :ready]'"
     end
   end
 end

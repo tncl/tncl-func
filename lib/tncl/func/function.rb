@@ -96,7 +96,9 @@ class TNCL::Func::Function # rubocop:disable Metrics/ClassLength
       transit!(:idle)
     end
   rescue TNCL::Machine::Machine::TransitionFailed
-    raise NotRunningError
+    raise NotRunningError if in_state?(:terminated)
+
+    raise
   end
 
   def stop
